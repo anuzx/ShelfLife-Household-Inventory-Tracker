@@ -10,10 +10,10 @@ const HouseholdSchema = new Schema({
   inviteCode: {
     type: String
   },
-  members: {
+  members: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
-  },
+  }],
   wasteScore: {
     type: Number,
     min: 0,
