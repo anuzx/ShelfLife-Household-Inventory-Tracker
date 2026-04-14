@@ -10,8 +10,9 @@ import { generateInviteCode } from "../utils/inviteCode"
 
 export const createHousehold = asyncHandler(async (req: Request, res: Response) => {
   const parsedData = HouseHoldSchema.safeParse(req.body)
+  const creatorId = req.userId as string
 
-  if (!parsedData.data) {
+  if (!parsedData.success) {
     throw new ApiError(400, "invalid input")
   }
 
@@ -22,10 +23,19 @@ export const createHousehold = asyncHandler(async (req: Request, res: Response) 
   const houseHold = await Household.create({
     name,
     inviteCode: code,
-    members: [],
+    members: [creatorId],
     wasteScore
   })
 
+  const user = await User.findById(creatorId)
+
+  if (!user) {
+    throw new ApiError(400, "invalid user id")
+  }
+
+  user.householdId = houseHold._id
+
+  await user.save()
 
   return res.status(201).json(new ApiRes(201, "new household created", houseHold))
 
@@ -47,13 +57,21 @@ export const joinHousehold = asyncHandler(async (req: Request, res: Response) =>
     throw new ApiError(400, "user does not exists")
   }
 
-  if (houseHold.members.includes(user._id)) {
-    throw new ApiError(400, "user already exists")
+  const alreadyMember = houseHold.members.some(
+    (memberId) => memberId.toString() === user._id.toString()
+  )
+
+  if (alreadyMember) {
+    throw new ApiError(400, "user is already a member of this household")
   }
 
   houseHold.members.push(user._id)
 
   await houseHold.save()
+
+  user.householdId = houseHold._id
+
+  await user.save()
 
   return res.status(200).json(new ApiRes(200, "new user added", houseHold.members))
 })
@@ -67,7 +85,7 @@ export const getCurrentUsersHousehold = asyncHandler(async (req: Request, res: R
     throw new ApiError(400, "invalid userId")
   }
 
-  const houseHoldId = user?.householdId
+  const houseHoldId = user.householdId
 
   const houseHold = await Household.findById(houseHoldId)
 

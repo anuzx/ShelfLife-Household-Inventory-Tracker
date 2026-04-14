@@ -32,5 +32,24 @@ const ItemSchema = new Schema({
   }
 }, { timestamps: true })
 
+ItemSchema.pre("save", function() {
 
+  // Don't overwrite a manually set terminal status
+  if (this.status === "used" || this.status === "wasted") {
+    return
+  }
+
+  const now = new Date()
+  const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+
+  if (this.expiryDate <= now) {
+    this.status = "expired"
+  } else if (this.expiryDate <= threeDaysFromNow) {
+    this.status = "expiring-soon"
+  } else {
+    this.status = "fresh"
+  }
+
+
+})
 export const Item = mongoose.model("Item", ItemSchema)
