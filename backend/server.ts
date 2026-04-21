@@ -1,5 +1,5 @@
 import { connectDB } from "./db/db";
-import { app } from ".";
+import { app } from "./app";
 
 
 connectDB("mongodb://localhost:27017/assignment")
