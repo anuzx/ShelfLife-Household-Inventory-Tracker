@@ -23,7 +23,7 @@ export const createHouseHold = async (data: CreateHouseHoldPayload): Promise<Cre
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": token
+      "Authorization": `Bearer ${token}`
     },
     body: JSON.stringify({
       data
@@ -44,7 +44,7 @@ export const joinHouseHold = async (data: joinHouseHoldPayload) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": token
+      "Authorization": `Bearer ${token}`
     },
     body: JSON.stringify({
       data

@@ -44,5 +44,5 @@ export const signinUser = async (data: SigninPayload): Promise<SigninResponse> =
 
   const json = await res.json()
 
-  return json.token
+  return json
 }
