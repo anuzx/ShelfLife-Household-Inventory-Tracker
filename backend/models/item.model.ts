@@ -33,7 +33,6 @@ const ItemSchema = new Schema({
 }, { timestamps: true })
 
 ItemSchema.pre("save", function() {
-
   // Don't overwrite a manually set terminal status
   if (this.status === "used" || this.status === "wasted") {
     return

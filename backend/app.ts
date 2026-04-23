@@ -8,9 +8,11 @@ import authRouter from "./routes/auth.route"
 import householdRouter from "./routes/household.route"
 import itemRouter from "./routes/item.route"
 import dashboardRouter from "./routes/dashboard.route"
+import { globalErrorHandler } from "./middlewares/globalErrorMiddleware"
 
 app.use("/api/auth", authRouter)
 app.use("/api/households", householdRouter)
 app.use("/api/items", itemRouter)
 app.use("/api/dashboard", dashboardRouter)
 
+app.use(globalErrorHandler)

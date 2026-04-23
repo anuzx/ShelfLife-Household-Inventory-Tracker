@@ -5,6 +5,7 @@ import { ItemsSchema } from "../validator/schema"
 import { ApiError } from "../utils/ApiError"
 import { ApiRes } from "../utils/ApiResponse"
 import { User } from "../models/user.model"
+import { sendExpiryEmail } from "../queue/producer"
 
 
 export const listHouseholdItems = asyncHandler(async (req: Request, res: Response) => {
@@ -32,7 +33,7 @@ export const createNewItem = asyncHandler(async (req: Request, res: Response) =>
     throw new ApiError(400, "invalid input")
   }
 
-  const { name, category, quantity, expiryDate, status } = parsedData.data
+  const { name, category, quantity, expiryDate } = parsedData.data
 
   const user = await User.findById(req.userId)
 
@@ -47,10 +48,26 @@ export const createNewItem = asyncHandler(async (req: Request, res: Response) =>
     category,
     quantity,
     expiryDate,
-    status: status ?? "fresh"
   })
 
+  const householdMembers = await User.find({
+    householdId: user.householdId
+  }).select("email")
 
+  const emails = householdMembers.map(u => u.email)
+
+  const delay = new Date(expiryDate).getTime() - Date.now()
+
+  if (delay <= 0) return; // don't schedule
+
+  if (delay > 0) {
+    sendExpiryEmail({
+      emails,
+      itemName: name,
+      expiryDate,
+      itemId: item._id.toString()
+    }, { delay }).catch(err => console.error("failed to queue email:", err))
+  }
   return res.status(201).json(new ApiRes(201, "item created", item))
 
 })
@@ -76,7 +93,8 @@ export const markStatus = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(403, "access denied")
   }
 
-  await Item.updateOne({ _id: itemId }, { $set: { status } }, { runValidators: true })
+  item.status = status
+  await item.save()
 
   return res.status(200).json(new ApiRes(200, "status updated", {}))
 })
@@ -113,6 +131,26 @@ export const updateItemDetails = asyncHandler(async (req: Request, res: Response
     { new: true }
   )
 
+  if (expiryDate) {
+    const householdMembers = await User.find({
+      householdId: item.householdId
+    }).select("email")
+
+    const emails = householdMembers.map(u => u.email)
+
+    const delay = new Date(expiryDate).getTime() - Date.now()
+
+    if (delay <= 0) return; // don't schedule
+
+    if (delay > 0) {
+      sendExpiryEmail({
+        emails,
+        itemName: name,
+        expiryDate,
+        itemId: item._id.toString()
+      }, { delay }).catch(err => console.error("failed to queue email:", err))
+    }
+  }
   return res.status(200).json(new ApiRes(200, "item updated", updatedItem))
 })
 
