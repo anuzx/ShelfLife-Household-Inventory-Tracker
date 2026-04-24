@@ -65,5 +65,5 @@ export const handleLogin = asyncHandler(async (req: Request, res: Response) => {
     email
   }, "secret_key")
 
-  res.status(200).json(new ApiRes(200, "signin done", token))
+  res.status(200).json(new ApiRes(200, "signin done", { token }))
 })

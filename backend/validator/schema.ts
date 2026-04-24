@@ -16,7 +16,7 @@ export const HouseHoldSchema = z.object({
   name: z.string().min(3).max(30),
   inviteCode: z.string().length(6).optional(),
   members: z.array(z.string()).optional(),
-  wasteScore: z.number()
+  wasteScore: z.number().default(0)
 })
 
 export const ItemsSchema = z.object({

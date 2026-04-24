@@ -11,38 +11,30 @@ type SigninPayload = {
   password: string
 }
 
-type SigninResponse = {
-  token: string;
-};
-
 export const signupUser = async (data: SignupPayload) => {
   const res = await fetch(`${BACKEND_URL}/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      data
-    })
+    body: JSON.stringify(data)
   })
   const json = await res.json()
 
-  return json
+  return json.data
 }
 
 
-export const signinUser = async (data: SigninPayload): Promise<SigninResponse> => {
+export const signinUser = async (data: SigninPayload) => {
   const res = await fetch(`${BACKEND_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      data
-    })
+    body: JSON.stringify(data)
   })
 
   const json = await res.json()
 
-  return json
+  return json.data
 }

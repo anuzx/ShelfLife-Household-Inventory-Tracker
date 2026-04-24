@@ -1,8 +1,17 @@
 import express from "express"
-
+import cors from "cors"
 export const app = express()
 
 app.use(express.json())
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 import authRouter from "./routes/auth.route"
 import householdRouter from "./routes/household.route"

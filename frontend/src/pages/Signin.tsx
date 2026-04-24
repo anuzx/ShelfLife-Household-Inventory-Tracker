@@ -24,7 +24,7 @@ export default function Signin() {
 
   function singin() {
     const email = emailRef.current?.value
-    const password = emailRef.current?.value
+    const password = passwordRef.current?.value
 
     if (!email || !password) {
       alert("invalid credentials")
@@ -37,7 +37,7 @@ export default function Signin() {
     <div>
       <input placeholder="test@gmail.com" ref={emailRef} />
       <input placeholder="password..." ref={passwordRef} />
-      <button onClick={singin}>Signup</button>
+      <button onClick={singin}>Signin</button>
     </div>
   )
 }

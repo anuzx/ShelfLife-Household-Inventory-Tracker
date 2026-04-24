@@ -1,38 +1,35 @@
 import { BACKEND_URL } from "../config/constant"
 
-interface houseHoldResponsePayload {
+export interface houseHoldResponsePayload {
   name: string;
   inviteCode: string;
   members: string[];
   wasteScore: string
 }
 
-interface CreateHouseHoldPayload {
+export interface CreateHouseHoldPayload {
   name: string;
-  wasteScore: string
 }
 
-interface CreateHouseHoldResponse {
+export interface CreateHouseHoldResponse {
   houseHold: houseHoldResponsePayload
 }
 
 const token: string = localStorage.getItem("token") as string;
 
 export const createHouseHold = async (data: CreateHouseHoldPayload): Promise<CreateHouseHoldResponse> => {
-  const res = await fetch(`${BACKEND_URL}/houshold/`, {
+  const res = await fetch(`${BACKEND_URL}/households/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({
-      data
-    })
+    body: JSON.stringify(data)
   })
 
   const json = await res.json()
 
-  return json.houseHold
+  return json
 }
 
 interface joinHouseHoldPayload {
@@ -40,21 +37,19 @@ interface joinHouseHoldPayload {
 }
 
 export const joinHouseHold = async (data: joinHouseHoldPayload) => {
-  const res = await fetch(`${BACKEND_URL}/household/join`, {
+  const res = await fetch(`${BACKEND_URL}/households/join`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({
-      data
-    })
+    body: JSON.stringify(data)
   })
 }
 
 
 export const getCurrentUsersHousehold = async () => {
-  const res = await fetch(`${BACKEND_URL}/household/me`, {
+  const res = await fetch(`${BACKEND_URL}/households/me`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     }
@@ -65,7 +60,7 @@ export const getCurrentUsersHousehold = async () => {
 }
 
 export const listAllMembers = async () => {
-  const res = await fetch(`${BACKEND_URL}/household/:id/members`, {
+  const res = await fetch(`${BACKEND_URL}/households/:id/members`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     }
