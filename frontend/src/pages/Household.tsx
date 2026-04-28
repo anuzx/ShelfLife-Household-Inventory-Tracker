@@ -13,14 +13,12 @@ export default function Household() {
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  // Create household 
   const { mutate: createMutate, isPending: isCreating } = useMutation({
     mutationFn: () => createHouseHold({ name: nameRef.current?.value ?? "" }),
     onSuccess: (data) => {
-      // Show the invite code so the user can share it before navigating
       const code = data.houseHold?.inviteCode
       if (code) setGeneratedCode(code)
-      navigate("/dashboard")
+      else navigate("/dashboard")
     },
     onError: (error) => {
       console.error("Create failed:", error)
@@ -28,7 +26,6 @@ export default function Household() {
     },
   })
 
-  // Join household 
   const { mutate: joinMutate, isPending: isJoining } = useMutation({
     mutationFn: () => joinHouseHold({ inviteCode: inviteInputRef.current?.value ?? "" }),
     onSuccess: () => {
@@ -47,94 +44,121 @@ export default function Household() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  function handleDone() {
-    navigate("/dashboard")
-  }
-
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+
         {/* Header */}
-        <div style={styles.header}>
-          <h1 style={styles.title}>Your Household</h1>
-          <p style={styles.subtitle}>Create a new room or join an existing one</p>
+        <div className="mb-8">
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Household</h1>
+          <p className="text-sm text-gray-500 mt-1">Create a new room or join an existing one</p>
         </div>
 
-        {/* Mode selector — only show if no mode chosen yet */}
+        {/* Mode selector */}
         {!mode && (
-          <div style={styles.btnRow}>
-            <button style={{ ...styles.btn, ...styles.btnPrimary }} onClick={() => setMode("create")}>
-              + Create Room
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMode("create")}
+              className="flex-1 border border-gray-900 text-gray-900 text-sm font-medium py-2 rounded hover:bg-gray-900 hover:text-white transition-colors"
+            >
+              Create room
             </button>
-            <button style={{ ...styles.btn, ...styles.btnSecondary }} onClick={() => setMode("join")}>
-              Join Room
+            <button
+              onClick={() => setMode("join")}
+              className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2 rounded hover:border-gray-500 transition-colors"
+            >
+              Join room
             </button>
           </div>
         )}
 
-        {/* ── CREATE FLOW ── */}
+        {/* Create flow */}
         {mode === "create" && !generatedCode && (
-          <div style={styles.form}>
-            <label style={styles.label}>Room Name</label>
-            <input
-              ref={nameRef}
-              style={styles.input}
-              placeholder="e.g. The Smith Family"
-              autoFocus
-            />
-            <div style={styles.btnRow}>
-              <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={() => setMode(null)}>
-                ← Back
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Room name</label>
+              <input
+                ref={nameRef}
+                type="text"
+                placeholder="e.g. The Smith Family"
+                autoFocus
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-600"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMode(null)}
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded"
+              >
+                Back
               </button>
               <button
-                style={{ ...styles.btn, ...styles.btnPrimary }}
                 onClick={() => createMutate()}
                 disabled={isCreating}
+                className="flex-1 bg-gray-900 text-white text-sm font-medium py-2 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCreating ? "Creating…" : "Create →"}
+                {isCreating ? "Creating..." : "Create"}
               </button>
             </div>
           </div>
         )}
 
-        {/* ── CREATE SUCCESS — show invite code ── */}
+        {/* Create success — invite code */}
         {mode === "create" && generatedCode && (
-          <div style={styles.form}>
-            <p style={styles.successText}>🎉 Household created!</p>
-            <label style={styles.label}>Invite Code — share this with your household members</label>
-            <div style={styles.codeRow}>
-              <span style={styles.code}>{generatedCode}</span>
-              <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={handleCopy}>
-                {copied ? "✓ Copied" : "Copy"}
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1">Room created</p>
+              <p className="text-xs text-gray-500">Share this code with your household members</p>
+            </div>
+
+            <div className="flex items-center justify-between border border-gray-200 rounded px-3 py-3 bg-gray-50">
+              <span className="font-mono text-lg font-semibold tracking-widest text-gray-900">
+                {generatedCode}
+              </span>
+              <button
+                onClick={handleCopy}
+                className="text-xs text-gray-500 hover:text-gray-900 border border-gray-300 rounded px-2 py-1"
+              >
+                {copied ? "Copied" : "Copy"}
               </button>
             </div>
-            <button style={{ ...styles.btn, ...styles.btnPrimary, width: "100%" }} onClick={handleDone}>
-              Done → Go to Dashboard
+
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="w-full bg-gray-900 text-white text-sm font-medium py-2 rounded hover:bg-gray-700"
+            >
+              Go to dashboard
             </button>
           </div>
         )}
 
-        {/* ── JOIN FLOW ── */}
+        {/* Join flow */}
         {mode === "join" && (
-          <div style={styles.form}>
-            <label style={styles.label}>Invite Code</label>
-            <input
-              ref={inviteInputRef}
-              style={styles.input}
-              placeholder="Paste 6-character code"
-              maxLength={6}
-              autoFocus
-            />
-            <div style={styles.btnRow}>
-              <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={() => setMode(null)}>
-                ← Back
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Invite code</label>
+              <input
+                ref={inviteInputRef}
+                type="text"
+                placeholder="6-character code"
+                maxLength={6}
+                autoFocus
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono tracking-widest text-gray-900 placeholder-gray-400 placeholder:tracking-normal focus:outline-none focus:border-gray-600"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMode(null)}
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded"
+              >
+                Back
               </button>
               <button
-                style={{ ...styles.btn, ...styles.btnPrimary }}
                 onClick={() => joinMutate()}
                 disabled={isJoining}
+                className="flex-1 bg-gray-900 text-white text-sm font-medium py-2 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isJoining ? "Joining…" : "Join →"}
+                {isJoining ? "Joining..." : "Join"}
               </button>
             </div>
           </div>
@@ -142,65 +166,4 @@ export default function Household() {
       </div>
     </div>
   )
-}
-
-// ── Inline styles (swap for Tailwind / CSS modules if preferred) ──
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#f5f5f0",
-    fontFamily: "'Segoe UI', sans-serif",
-  },
-  card: {
-    background: "#fff",
-    borderRadius: 16,
-    padding: "40px 36px",
-    width: "100%",
-    maxWidth: 440,
-    boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
-  },
-  header: {
-    textAlign: "center",
-    marginBottom: 32,
-  },
-  icon: { fontSize: 40 },
-  title: { margin: "8px 0 4px", fontSize: 26, fontWeight: 700, color: "#1a1a1a" },
-  subtitle: { margin: 0, color: "#666", fontSize: 14 },
-  form: { display: "flex", flexDirection: "column", gap: 16 },
-  label: { fontSize: 13, fontWeight: 600, color: "#444", marginBottom: -8 },
-  input: {
-    padding: "12px 14px",
-    border: "1.5px solid #ddd",
-    borderRadius: 10,
-    fontSize: 15,
-    outline: "none",
-    transition: "border-color .2s",
-  },
-  btnRow: { display: "flex", gap: 12, marginTop: 4 },
-  btn: {
-    flex: 1,
-    padding: "12px 20px",
-    borderRadius: 10,
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: "pointer",
-    border: "none",
-    transition: "opacity .15s",
-  },
-  btnPrimary: { background: "#2e7d32", color: "#fff" },
-  btnSecondary: { background: "#1565c0", color: "#fff" },
-  btnGhost: { background: "#f0f0f0", color: "#333", flex: "0 0 auto" },
-  codeRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    background: "#f5f5f0",
-    borderRadius: 10,
-    padding: "12px 16px",
-  },
-  code: { flex: 1, fontFamily: "monospace", fontSize: 22, fontWeight: 700, letterSpacing: 4, color: "#1a1a1a" },
-  successText: { textAlign: "center", fontSize: 18, fontWeight: 600, margin: 0 },
 }
