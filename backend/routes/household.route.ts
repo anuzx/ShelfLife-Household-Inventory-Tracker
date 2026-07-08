@@ -1,15 +1,21 @@
-
 import { Router } from "express";
-import { createHousehold, joinHousehold, getCurrentUsersHousehold, listAllMembers } from "../controllers/household.controller";
-import { VerifyUser } from "../middlewares/auth.middleware";
+import {
+  createHousehold,
+  joinHousehold,
+  getCurrentUsersHousehold,
+  listAllMembers,
+} from "../controllers/household.controller";
+import { verifyUser } from "../middlewares/auth.middleware";
 import { rateLimiter } from "../middlewares/ratelimiter.middleware";
 
-const router = Router()
+const router = Router();
 
-router.post("/", VerifyUser, createHousehold)
+router.use(verifyUser);
 
-router.post("/join", VerifyUser, rateLimiter, joinHousehold)
+router.post("/", createHousehold);
 
-router.get("/me", VerifyUser, getCurrentUsersHousehold)
-router.get("/:id/members", VerifyUser, listAllMembers)
-export default router 
+router.post("/join", rateLimiter, joinHousehold);
+
+router.get("/me", getCurrentUsersHousehold);
+router.get("/:id/members", listAllMembers);
+export default router;

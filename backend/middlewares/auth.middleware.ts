@@ -10,8 +10,8 @@ declare global {
   }
 }
 
-export const VerifyUser = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split("")[1]
+export const verifyUser = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.headers.authorization?.split(" ")[1]
 
   if (!token) {
     throw new ApiError(401, "Authorization token missing");
@@ -25,5 +25,6 @@ export const VerifyUser = (req: Request, res: Response, next: NextFunction) => {
     next()
   } catch (error) {
     console.log("invalid token", error)
+    next(error)
   }
 }

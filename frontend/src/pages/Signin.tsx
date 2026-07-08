@@ -1,83 +1,74 @@
-import { useMutation } from "@tanstack/react-query"
-import { useRef } from "react"
-import { useNavigate } from "react-router-dom"
-import { signinUser } from "../../api/auth"
+import { useForm } from "react-hook-form";
+import { loginSchema, type LoginFormData } from "../validator/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { signin } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
-export default function Signin() {
-  const emailRef = useRef<HTMLInputElement | null>(null)
-  const passwordRef = useRef<HTMLInputElement | null>(null)
-  const navigate = useNavigate()
+const Signin = () => {
+  const navigate = useNavigate();
 
-  const { mutate: signinMutation, isPending } = useMutation({
-    mutationFn: signinUser,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: "onTouched",
+  });
+
+  const mutation = useMutation({
+    mutationFn: signin,
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token)
-      navigate("/household")
+      localStorage.setItem("token", data.data.token);
+      navigate("/dashboard");
     },
-    onError: (error) => {
-      console.error("Signin failed:", error)
-      alert("Invalid credentials")
-    },
-  })
+  });
 
-  function signin() {
-    const email = emailRef.current?.value
-    const password = passwordRef.current?.value
-
-    if (!email || !password) {
-      alert("All fields are required")
-      return
-    }
-
-    signinMutation({ email, password })
-  }
-
+  const onSubmit = (data: LoginFormData) => {
+    mutation.mutate(data);
+  };
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-full max-w-sm bg-white p-8 rounded-lg shadow-md space-y-4"
+      >
+        <h1 className="text-2xl font-semibold text-gray-800 text-center">
+          Sign in
+        </h1>
 
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">Sign in</h1>
-          <p className="text-sm text-gray-500 mt-1">Enter your credentials to continue</p>
+        <div>
+          <input
+            {...register("email")}
+            placeholder="Email"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p className="text-red-500 text-sm mt-1">{errors.email?.message}</p>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-            <input
-              ref={emailRef}
-              type="email"
-              placeholder="you@example.com"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-600"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Password</label>
-            <input
-              ref={passwordRef}
-              type="password"
-              placeholder="••••••••"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-600"
-            />
-          </div>
-
-          <button
-            onClick={signin}
-            disabled={isPending}
-            className="w-full bg-gray-900 text-white text-sm font-medium py-2 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed mt-1"
-          >
-            {isPending ? "Signing in..." : "Sign in"}
-          </button>
+        <div>
+          <input
+            {...register("password")}
+            type="password"
+            placeholder="Password"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p className="text-red-500 text-sm mt-1">
+            {errors.password?.message}
+          </p>
         </div>
 
-        <p className="text-xs text-gray-400 mt-6">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-gray-900 underline underline-offset-2">
-            Sign up
-          </a>
-        </p>
-      </div>
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="w-full bg-black text-white rounded-md py-2 font-medium hover:bg-gray-900 disabled:bg-blue-300 transition-colors"
+        >
+          {mutation.isPending ? "Loading..." : "Sign in"}
+        </button>
+      </form>
     </div>
-  )
-}
+  );
+};
+
+export { Signin };

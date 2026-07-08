@@ -28,7 +28,7 @@ const ItemSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ["fresh", "expiring-soon", "expired", "used", "wasted"]
+    enum: ["fresh", "expiringSoon", "expired", "used", "wasted"]
   }
 }, { timestamps: true })
 
@@ -44,7 +44,7 @@ ItemSchema.pre("save", function() {
   if (this.expiryDate <= now) {
     this.status = "expired"
   } else if (this.expiryDate <= threeDaysFromNow) {
-    this.status = "expiring-soon"
+    this.status = "expiringSoon"
   } else {
     this.status = "fresh"
   }

@@ -28,7 +28,7 @@ export const showStatus = asyncHandler(async (req: Request, res: Response) => {
   // Shape into a flat object: { fresh: N, expiring-soon: N, expired: N, used: N, wasted: N }
   const counts: Record<string, number> = {
     fresh: 0,
-    "expiring-soon": 0,
+    expiringSoon: 0,
     expired: 0,
     used: 0,
     wasted: 0
@@ -40,8 +40,8 @@ export const showStatus = asyncHandler(async (req: Request, res: Response) => {
 
   // Recalculate waste score: (used / (used + wasted)) * 100
   // Higher score = more items used rather than wasted
-  const used = counts["used"]
-  const wasted = counts["wasted"]
+  const used = counts.used!
+  const wasted = counts.wasted!
   const total = used + wasted
   const wasteScore = total > 0 ? Math.round((used / total) * 100) : 0
 

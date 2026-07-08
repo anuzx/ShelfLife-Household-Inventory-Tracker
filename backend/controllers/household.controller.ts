@@ -1,111 +1,123 @@
-import type { Request, Response } from "express"
-import { asyncHandler } from "../utils/asyncHandler"
-import { Household } from "../models/household.model"
-import { HouseHoldSchema } from "../validator/schema"
-import { ApiError } from "../utils/ApiError"
-import { User } from "../models/user.model"
-import { ApiRes } from "../utils/ApiResponse"
-import { generateInviteCode } from "../utils/inviteCode"
+import type { Request, Response } from "express";
+import { asyncHandler } from "../utils/asyncHandler";
+import { Household } from "../models/household.model";
+import { HouseHoldSchema } from "../validator/schema";
+import { ApiError } from "../utils/ApiError";
+import { User } from "../models/user.model";
+import { ApiRes } from "../utils/ApiResponse";
+import { generateInviteCode } from "../utils/inviteCode";
 
+export const createHousehold = asyncHandler(
+  async (req: Request, res: Response) => {
+    const parsedData = HouseHoldSchema.safeParse(req.body);
+    const creatorId = req.userId as string;
 
-export const createHousehold = asyncHandler(async (req: Request, res: Response) => {
-  const parsedData = HouseHoldSchema.safeParse(req.body)
-  const creatorId = req.userId as string
+    if (!parsedData.success) {
+      throw new ApiError(400, "invalid input");
+    }
 
-  if (!parsedData.success) {
-    throw new ApiError(400, "invalid input")
-  }
+    const { name, wasteScore } = parsedData.data;
 
-  const { name, inviteCode, members, wasteScore } = parsedData.data
+    const code = generateInviteCode();
 
-  const code = generateInviteCode()
+    const houseHold = await Household.create({
+      name,
+      inviteCode: code,
+      members: [creatorId],
+      wasteScore,
+    });
 
-  const houseHold = await Household.create({
-    name,
-    inviteCode: code,
-    members: [creatorId],
-    wasteScore
-  })
+    const user = await User.findById(creatorId);
 
-  const user = await User.findById(creatorId)
+    if (!user) {
+      throw new ApiError(400, "invalid user id");
+    }
 
-  if (!user) {
-    throw new ApiError(400, "invalid user id")
-  }
+    user.householdId = houseHold._id;
 
-  user.householdId = houseHold._id
+    await user.save();
 
-  await user.save()
+    return res
+      .status(201)
+      .json(new ApiRes(201, "new household created", houseHold));
+  },
+);
 
-  return res.status(201).json(new ApiRes(201, "new household created", houseHold))
+export const joinHousehold = asyncHandler(
+  async (req: Request, res: Response) => {
+    const inviteCode = req.body.inviteCode;
+    const userId = req.userId;
 
-})
+    const houseHold = await Household.findOne({ inviteCode });
 
-export const joinHousehold = asyncHandler(async (req: Request, res: Response) => {
-  const inviteCode = req.body.inviteCode
-  const userId = req.userId
+    if (!houseHold) {
+      throw new ApiError(400, "invalid invite code");
+    }
 
-  const houseHold = await Household.findOne({ inviteCode })
+    const user = await User.findById(userId);
 
-  if (!houseHold) {
-    throw new ApiError(400, "invalid invite code")
-  }
+    if (!user) {
+      throw new ApiError(400, "user does not exists");
+    }
 
-  const user = await User.findById(userId)
+    const alreadyMember = houseHold.members.some(
+      (memberId) => memberId.toString() === user._id.toString(),
+    );
 
-  if (!user) {
-    throw new ApiError(400, "user does not exists")
-  }
+    if (alreadyMember) {
+      throw new ApiError(400, "user is already a member of this household");
+    }
 
-  const alreadyMember = houseHold.members.some(
-    (memberId) => memberId.toString() === user._id.toString()
-  )
+    houseHold.members.push(user._id);
 
-  if (alreadyMember) {
-    throw new ApiError(400, "user is already a member of this household")
-  }
+    await houseHold.save();
 
-  houseHold.members.push(user._id)
+    user.householdId = houseHold._id;
 
-  await houseHold.save()
+    await user.save();
 
-  user.householdId = houseHold._id
+    return res
+      .status(200)
+      .json(new ApiRes(200, "new user added", houseHold.members));
+  },
+);
 
-  await user.save()
+export const getCurrentUsersHousehold = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
 
-  return res.status(200).json(new ApiRes(200, "new user added", houseHold.members))
-})
+    const user = await User.findById(userId);
 
-export const getCurrentUsersHousehold = asyncHandler(async (req: Request, res: Response) => {
-  const userId = req.userId
+    if (!user) {
+      throw new ApiError(400, "invalid userId");
+    }
 
-  const user = await User.findById(userId)
+    const houseHoldId = user.householdId;
 
-  if (!user) {
-    throw new ApiError(400, "invalid userId")
-  }
+    const houseHold = await Household.findById(houseHoldId);
 
-  const houseHoldId = user.householdId
+    if (!houseHold) {
+      throw new ApiError(400, "inavlid id");
+    }
 
-  const houseHold = await Household.findById(houseHoldId)
+    return res
+      .status(200)
+      .json(new ApiRes(200, "household of this user", houseHold));
+  },
+);
 
-  if (!houseHold) {
-    throw new ApiError(400, "inavlid id")
-  }
+export const listAllMembers = asyncHandler(
+  async (req: Request, res: Response) => {
+    const houseHoldId = req.params.id;
 
-  return res.status(200).json(new ApiRes(200, "household of this user", houseHold))
-})
+    const houseHold = await Household.findById(houseHoldId);
 
-export const listAllMembers = asyncHandler(async (req: Request, res: Response) => {
-  const houseHoldId = req.params.id
+    if (!houseHold) {
+      throw new ApiError(400, "inavlid houseHold id");
+    }
 
-  const houseHold = await Household.findById(houseHoldId)
+    const result = houseHold.members;
 
-  if (!houseHold) {
-    throw new ApiError(400, "inavlid houseHold id")
-  }
-
-  const result = houseHold.members
-
-  return res.status(200).json(new ApiRes(200, "list of members", result))
-})
+    return res.status(200).json(new ApiRes(200, "list of members", result));
+  },
+);

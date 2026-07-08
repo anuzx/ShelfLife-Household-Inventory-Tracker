@@ -1,10 +1,12 @@
-
 import { Router } from "express";
 import { showStatus, itemExpiring } from "../controllers/dashboard.controller";
+import { verifyUser } from "../middlewares/auth.middleware";
 
-const router = Router()
+const router = Router();
 
-router.get("/status", showStatus)
-router.get("/expiring", itemExpiring)
+router.use(verifyUser)
 
-export default router 
+router.get("/status", showStatus);
+router.get("/expiring", itemExpiring);
+
+export default router;
