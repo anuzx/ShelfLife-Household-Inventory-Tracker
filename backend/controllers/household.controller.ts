@@ -16,7 +16,7 @@ export const createHousehold = asyncHandler(
       throw new ApiError(400, "invalid input");
     }
 
-    const { name, wasteScore } = parsedData.data;
+    const { name } = parsedData.data;
 
     const code = generateInviteCode();
 
@@ -24,7 +24,6 @@ export const createHousehold = asyncHandler(
       name,
       inviteCode: code,
       members: [creatorId],
-      wasteScore,
     });
 
     const user = await User.findById(creatorId);
@@ -97,7 +96,7 @@ export const getCurrentUsersHousehold = asyncHandler(
     const houseHold = await Household.findById(houseHoldId);
 
     if (!houseHold) {
-      throw new ApiError(400, "inavlid id");
+      throw new ApiError(400, "invalid id");
     }
 
     return res
@@ -113,7 +112,7 @@ export const listAllMembers = asyncHandler(
     const houseHold = await Household.findById(houseHoldId);
 
     if (!houseHold) {
-      throw new ApiError(400, "inavlid houseHold id");
+      throw new ApiError(400, "invalid houseHold id");
     }
 
     const result = houseHold.members;

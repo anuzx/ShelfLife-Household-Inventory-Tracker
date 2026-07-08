@@ -77,7 +77,7 @@ export const markStatus = asyncHandler(async (req: Request, res: Response) => {
   const creatorId = req.userId
   const status = req.body.status
 
-  const validStatuses = ["fresh", "expiring-soon", "expired", "used", "wasted"]
+  const validStatuses = ["fresh", "expiringSoon", "expired", "used", "wasted"]
 
   if (!status || !validStatuses.includes(status)) {
     throw new ApiError(400, "invalid status value")
@@ -120,16 +120,14 @@ export const updateItemDetails = asyncHandler(async (req: Request, res: Response
     throw new ApiError(403, "access denied")
   }
 
-  const updatedItem = await Item.findByIdAndUpdate(itemId,
-    {
-      name,
-      category,
-      quantity,
-      expiryDate,
-      status
-    },
-    { new: true }
-  )
+
+  item.name = name;
+  item.category = category;
+  item.quantity = quantity;
+  item.expiryDate = expiryDate;
+  item.status = status;
+  await item.save();
+
 
   if (expiryDate) {
     const householdMembers = await User.find({
@@ -140,8 +138,6 @@ export const updateItemDetails = asyncHandler(async (req: Request, res: Response
 
     const delay = new Date(expiryDate).getTime() - Date.now()
 
-    if (delay <= 0) return; // don't schedule
-
     if (delay > 0) {
       sendExpiryEmail({
         emails,
@@ -151,7 +147,7 @@ export const updateItemDetails = asyncHandler(async (req: Request, res: Response
       }, { delay }).catch(err => console.error("failed to queue email:", err))
     }
   }
-  return res.status(200).json(new ApiRes(200, "item updated", updatedItem))
+  return res.status(200).json(new ApiRes(200, "item updated", item))
 })
 
 export const removeItem = asyncHandler(async (req: Request, res: Response) => {

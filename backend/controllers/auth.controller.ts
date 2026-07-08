@@ -12,16 +12,16 @@ export const handleRegister = asyncHandler(async (req: Request, res: Response) =
   const parsedData = RegisterSchema.safeParse(req.body)
 
   if (!parsedData.success) {
-    throw new ApiError(400, "inavlid input")
+    throw new ApiError(400, "invalid input")
   }
 
   const { name, email, password } = parsedData.data
 
-  const existEmail = await User.findOne({
+  const existingEmail = await User.findOne({
     email
   })
 
-  if (existEmail) {
+  if (existingEmail) {
     throw new ApiError(400, "this email already exists")
   }
 
@@ -43,25 +43,25 @@ export const handleLogin = asyncHandler(async (req: Request, res: Response) => {
   const parsedData = LoginSchema.safeParse(req.body)
 
   if (!parsedData.success) {
-    throw new ApiError(400, "inavlid input")
+    throw new ApiError(400, "invalid input")
   }
 
   const { email, password } = parsedData.data
 
-  const exisitngUser = await User.findOne({ email })
+  const existingUser = await User.findOne({ email })
 
-  if (!exisitngUser) {
+  if (!existingUser) {
     throw new ApiError(400, "invalid email or password")
   }
 
-  const validPassword = await bcrypt.compare(password, exisitngUser.password)
+  const validPassword = await bcrypt.compare(password, existingUser.password)
 
   if (!validPassword) {
     throw new ApiError(400, "invalid email or password")
   }
 
   const token = jwt.sign({
-    id: exisitngUser._id,
+    id: existingUser._id,
     email
   }, "secret_key")
 

@@ -13,7 +13,6 @@ export const LoginSchema = z.object({
 
 export const HouseHoldSchema = z.object({
   name: z.string().min(3).max(30),
-  wasteScore: z.number().default(0)
 })
 
 export const ItemsSchema = z.object({
@@ -21,5 +20,5 @@ export const ItemsSchema = z.object({
   category: z.enum(['produce', 'dairy', 'meat', 'pantry', 'frozen', 'other']),
   quantity: z.number(),
   expiryDate: z.coerce.date(),
-  status: z.enum(['fresh', 'expiring-soon', 'expired', 'used', 'wasted'])
+  status: z.enum(['fresh', 'expiringSoon', 'expired', 'used', 'wasted'])
 })
